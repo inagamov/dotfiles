@@ -26,35 +26,12 @@ local themes = {
 	},
 }
 
--- 2. install both
+-- install theme
 vim.pack.add(vim.tbl_map(function(t)
 	return t.spec
 end, vim.tbl_values(themes)))
 
--- 3. your transparency bit, unchanged
-local function set_transparent()
-	local groups = {
-		"Normal",
-		"NormalNC",
-		"EndOfBuffer",
-		"NormalFloat",
-		"FloatBorder",
-		"SignColumn",
-		"StatusLine",
-		"StatusLineNC",
-		"TabLine",
-		"TabLineFill",
-		"TabLineSel",
-		"ColorColumn",
-	}
-	for _, g in ipairs(groups) do
-		vim.api.nvim_set_hl(0, g, { bg = "none" })
-	end
-	vim.api.nvim_set_hl(0, "TabLineFill", { bg = "none", fg = "#767676" })
-end
-vim.api.nvim_create_autocmd("ColorScheme", { callback = set_transparent })
-
--- 4. switching
+-- theme switching
 local theme_file = vim.fn.stdpath("data") .. "/theme.txt"
 local done = {}
 
