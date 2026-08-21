@@ -221,26 +221,7 @@ local augroup = vim.api.nvim_create_augroup("UserConfig", { clear = true })
 -- Format on save (ONLY real file buffers, ONLY when efm is attached)
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = augroup,
-	pattern = {
-		"*.lua",
-		"*.py",
-		"*.go",
-		"*.js",
-		"*.jsx",
-		"*.ts",
-		"*.tsx",
-		"*.json",
-		"*.css",
-		"*.scss",
-		"*.html",
-		"*.sh",
-		"*.bash",
-		"*.zsh",
-		"*.c",
-		"*.cpp",
-		"*.h",
-		"*.hpp",
-	},
+	pattern = "*",
 	callback = function(args)
 		-- avoid formatting non-file buffers (helps prevent weird write prompts)
 		if vim.bo[args.buf].buftype ~= "" then
@@ -796,7 +777,6 @@ do
 
 	vim.lsp.config("efm", {
 		filetypes = {
-			"blade",
 			"css",
 			"html",
 			"javascript",
@@ -816,13 +796,13 @@ do
 		init_options = { documentFormatting = true },
 		settings = {
 			languages = {
-				blade = { prettier_d },
 				css = { prettier_d },
 				html = { prettier_d },
 				javascript = { eslint_d, prettier_d },
 				javascriptreact = { eslint_d, prettier_d },
 				json = { fixjson },
-				jsonc = { fixjson },
+				-- fixjson strips // and /* */ comments; prettier keeps them
+				jsonc = { prettier_d },
 				lua = { luacheck, stylua },
 				markdown = { prettier_d },
 				php = { php_cs_fixer, phpstan },
