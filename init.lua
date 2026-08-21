@@ -1,4 +1,26 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+--   init.lua · a single-file Neovim config (0.12+, native-first)
+--
+--   vim.pack for plugins · vim.lsp for servers · treesitter for syntax
+--   efm for linting & formatting · per-server configs in after/lsp/
+--
+--   ¶ Theme      colorschemes + :Theme picker
+--   ¶ Options    editor behavior
+--   ¶ Keymaps    global mappings (leader = space)
+--   ¶ Autocmds   format-on-save, yank highlight, cursor restore
+--   ¶ Plugins    vim.pack + per-plugin setup
+--   ¶ LSP        diagnostics, formatting, completion, servers
+--
+--   jump to any section by searching for "¶"
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+
 vim.opt.termguicolors = true
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ THEME · colorschemes + :Theme picker, choice persisted across sessions
+-- ═══════════════════════════════════════════════════════════════════════════
 
 local themes = {
 	evergarden = {
@@ -70,10 +92,11 @@ end, { nargs = "?", complete = names })
 local saved_theme = vim.fn.filereadable(theme_file) == 1 and vim.fn.readfile(theme_file)[1] or nil
 apply(saved_theme ~= nil and saved_theme ~= "" and saved_theme or "evergarden", false)
 
---
--- ============================================================================
--- OPTIONS
--- ============================================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ OPTIONS · editor behavior
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ── lines & scrolling ──
 vim.opt.number = true -- line number
 vim.opt.relativenumber = true -- relative line numbers
 vim.opt.cursorline = true -- highlight current line
@@ -81,6 +104,7 @@ vim.opt.wrap = false -- do not wrap lines by default
 vim.opt.scrolloff = 10 -- keep 10 lines above/below cursor
 vim.opt.sidescrolloff = 10 -- keep 10 lines to left/right of cursor
 
+-- ── indentation ──
 vim.opt.tabstop = 2 -- tabwidth
 vim.opt.shiftwidth = 2 -- indent width
 vim.opt.softtabstop = 2 -- soft tab stop not tabs on tab/backspace
@@ -88,11 +112,13 @@ vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.smartindent = true -- smart auto-indent
 vim.opt.autoindent = true -- copy indent from current line
 
+-- ── search ──
 vim.opt.ignorecase = true -- case insensitive search
 vim.opt.smartcase = true -- case sensitive if uppercase in string
 vim.opt.hlsearch = true -- highlight search matches
 vim.opt.incsearch = true -- show matches as you type
 
+-- ── ui ──
 vim.opt.signcolumn = "yes" -- always show a sign column
 vim.opt.showmatch = true -- highlights matching brackets
 vim.opt.cmdheight = 1 -- single line command line
@@ -107,6 +133,7 @@ vim.opt.concealcursor = "" -- do not hide cursorline in markup
 vim.opt.synmaxcol = 300 -- syntax highlighting limit
 vim.opt.fillchars = { eob = " " } -- hide "~" on empty lines
 
+-- ── files, undo & timing ──
 local undodir = vim.fn.expand("~/.vim/undodir")
 if
 	vim.fn.isdirectory(undodir) == 0 -- create undodir if nonexistent
@@ -125,6 +152,7 @@ vim.opt.ttimeoutlen = 50 -- key code timeout
 vim.opt.autoread = true -- auto-reload changes if outside of neovim
 vim.opt.autowrite = false -- do not auto-save
 
+-- ── behavior ──
 vim.opt.hidden = true -- allow hidden buffers
 vim.opt.errorbells = false -- no error sounds
 vim.opt.backspace = "indent,eol,start" -- better backspace behaviour
@@ -136,29 +164,35 @@ vim.opt.mouse = "a" -- enable mouse support
 vim.opt.clipboard:append("unnamedplus") -- use system clipboard
 vim.opt.modifiable = true -- allow buffer modifications
 
+-- ── cursor ──
 vim.opt.guicursor =
 	"n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175" -- cursor blinking and settings
 
--- Folding: requires treesitter available at runtime; safe fallback if not
+-- ── folding ──
+-- expr folding via treesitter; foldlevel 99 keeps everything open on entry
 vim.opt.foldmethod = "expr" -- use expression for folding
 vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- use treesitter for folding
 vim.opt.foldlevel = 99 -- start with all folds open
 
+-- ── splits ──
 vim.opt.splitbelow = true -- horizontal splits go below
 vim.opt.splitright = true -- vertical splits go right
 
+-- ── cmdline & performance ──
 vim.opt.wildmenu = true -- tab completion
 vim.opt.wildmode = "longest:full,full" -- complete longest common match, full completion list, cycle through with Tab
 vim.opt.diffopt:append("linematch:60") -- improve diff display
 vim.opt.redrawtime = 10000 -- increase neovim redraw tolerance
 vim.opt.maxmempattern = 20000 -- increase max memory
 
--- ============================================================================
--- KEYMAPS
--- ============================================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ KEYMAPS · leader = space
+-- ═══════════════════════════════════════════════════════════════════════════
+
 vim.g.mapleader = " " -- space for leader
 vim.g.maplocalleader = " " -- space for localleader
 
+-- ── movement & search ──
 -- better movement in wrapped text
 vim.keymap.set("n", "j", function()
 	return vim.v.count == 0 and "gj" or "j"
@@ -175,9 +209,11 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Half page down (centered)" })
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Half page up (centered)" })
 vim.keymap.set("n", "G", "Gzz", { desc = "Bottom of the file (centered)" })
 
+-- ── clipboard ──
 vim.keymap.set("x", "<leader>p", '"_dP', { desc = "Paste without yanking" })
 vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yanking" })
 
+-- ── buffers, windows & tmux ──
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
@@ -194,6 +230,7 @@ vim.keymap.set("n", "<C-Down>", ":resize -2<CR>", { desc = "Decrease window heig
 vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease window width" })
 vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>", { desc = "Increase window width" })
 
+-- ── editing ──
 vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
 vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", { desc = "Move line up" })
 vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
@@ -204,6 +241,7 @@ vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 
 vim.keymap.set("n", "J", "mzJ`z", { desc = "Join lines and keep cursor position" })
 
+-- ── utility ──
 vim.keymap.set("n", "<leader>pa", function() -- show file path
 	local path = vim.fn.expand("%:p")
 	vim.fn.setreg("+", path)
@@ -214,13 +252,14 @@ vim.keymap.set("n", "<leader>td", function()
 	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
 end, { desc = "Toggle diagnostics" })
 
--- ============================================================================
--- AUTOCMDS
--- ============================================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ AUTOCMDS
+-- ═══════════════════════════════════════════════════════════════════════════
 
 local augroup = vim.api.nvim_create_augroup("UserConfig", { clear = true })
 
--- Format on save (ONLY real file buffers, ONLY when efm is attached)
+-- ── format on save ──
+-- only real file buffers, only when efm is attached, never in diff mode.
 -- efm's languages table says what efm CAN format; this list says what
 -- auto-formats on save (markdown/yaml/php stay manual — use <leader>oi)
 local format_on_save_ft = {
@@ -273,7 +312,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	end,
 })
 
--- highlight yanked text
+-- ── highlight on yank ──
 vim.api.nvim_create_autocmd("TextYankPost", {
 	group = augroup,
 	callback = function()
@@ -281,7 +320,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
--- return to last cursor position
+-- ── restore last cursor position ──
 vim.api.nvim_create_autocmd("BufReadPost", {
 	group = augroup,
 	desc = "Restore last cursor position",
@@ -302,7 +341,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 	end,
 })
 
--- wrap, linebreak and spellcheck on markdown and text files
+-- ── prose filetypes: wrap, linebreak, spellcheck ──
 vim.api.nvim_create_autocmd("FileType", {
 	group = augroup,
 	pattern = { "markdown", "text", "gitcommit" },
@@ -313,9 +352,10 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- ============================================================================
--- PLUGINS (vim.pack)
--- ============================================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ PLUGINS · vim.pack + per-plugin setup
+-- ═══════════════════════════════════════════════════════════════════════════
+
 vim.pack.add({
 	"https://www.github.com/echasnovski/mini.nvim",
 	"https://github.com/nvim-lualine/lualine.nvim",
@@ -340,13 +380,7 @@ vim.pack.add({
 	"https://github.com/christoomey/vim-tmux-navigator",
 })
 
--- ============================================================================
--- PLUGIN CONFIGS
--- ============================================================================
-
---
--- nvim-treesitter
---
+-- ── nvim-treesitter ──
 require("nvim-treesitter").setup()
 
 require("nvim-treesitter").install({
@@ -397,6 +431,7 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- keep parsers in sync when nvim-treesitter itself updates
 vim.api.nvim_create_autocmd("PackChanged", {
 	group = augroup,
 	callback = function(ev)
@@ -406,9 +441,7 @@ vim.api.nvim_create_autocmd("PackChanged", {
 	end,
 })
 
---
--- nvim-tree
---
+-- ── nvim-tree ──
 require("nvim-tree").setup({
 	view = {
 		width = 35,
@@ -424,9 +457,7 @@ vim.keymap.set("n", "<leader>e", function()
 	require("nvim-tree.api").tree.toggle()
 end, { desc = "Toggle NvimTree" })
 
---
--- fzf-lua
---
+-- ── fzf-lua ──
 require("fzf-lua").setup({})
 
 vim.keymap.set("n", "<leader>ff", function()
@@ -448,9 +479,7 @@ vim.keymap.set("n", "<leader>fX", function()
 	require("fzf-lua").diagnostics_workspace()
 end, { desc = "FZF Diagnostics Workspace" })
 
---
--- mini.*
---
+-- ── mini.nvim (clue · diff · git) ──
 require("mini.clue").setup({
 	triggers = {
 		{ mode = "n", keys = "<Leader>" },
@@ -491,9 +520,8 @@ vim.keymap.set("n", "<leader>hb", function()
 	require("mini.git").show_at_cursor()
 end, { desc = "Git blame/show" })
 
---
--- lualine
---
+-- ── lualine ──
+-- setup re-runs on ColorScheme so the statusline follows :Theme switches
 local function setup_lualine()
 	require("lualine").setup({
 		options = {
@@ -535,17 +563,13 @@ end
 setup_lualine()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_lualine })
 
---
--- mason
---
+-- ── mason ──
 require("mason").setup({})
 
---
--- nvim-lspconfig
---
--- ============================================================================
--- LSP, Linting, Formatting & Completion
--- ============================================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ¶ LSP · diagnostics, formatting, completion, servers
+-- ═══════════════════════════════════════════════════════════════════════════
+
 local lsp_augroup = vim.api.nvim_create_augroup("UserLsp", { clear = true })
 
 vim.o.winborder = "rounded" -- replaces the open_floating_preview patch
@@ -553,6 +577,7 @@ vim.o.winborder = "rounded" -- replaces the open_floating_preview patch
 -- blade files aren't detected by default
 vim.filetype.add({ pattern = { [".*%.blade%.php"] = "blade" } })
 
+-- ── diagnostics ──
 local diagnostic_signs = {
 	Error = "\u{f057} ",
 	Warn = "\u{f071} ",
@@ -582,7 +607,8 @@ vim.diagnostic.config({
 	},
 })
 
--- organize imports, then format — synchronous, no race
+-- ── organize imports & format (<leader>oi) ──
+-- synchronous on purpose: the code action must land before formatting runs
 local function organize_then_format(bufnr)
 	local params = vim.lsp.util.make_range_params(0, "utf-16")
 	params.context = { only = { "source.organizeImports" }, diagnostics = {} }
@@ -610,6 +636,7 @@ local function organize_then_format(bufnr)
 	})
 end
 
+-- ── buffer-local keymaps, registered on attach ──
 local function lsp_on_attach(ev)
 	local client = vim.lsp.get_client_by_id(ev.data.client_id)
 	if not client then
@@ -670,9 +697,7 @@ vim.keymap.set("n", "<leader>q", function()
 	vim.diagnostic.setloclist({ open = true })
 end, { desc = "Open diagnostic list" })
 
--- ============================================================================
--- Completion
--- ============================================================================
+-- ── completion (blink.cmp) ──
 require("blink.cmp").setup({
 	keymap = {
 		preset = "none",
@@ -703,12 +728,11 @@ vim.lsp.config["*"] = {
 	capabilities = require("blink.cmp").get_lsp_capabilities(),
 }
 
--- ============================================================================
--- Servers — per-server configs live in after/lsp/<name>.lua (:h lsp-config;
--- "after" so they win over nvim-lspconfig's bundled lsp/ files, which come
--- later in 'runtimepath' and would otherwise take precedence on conflicting
--- keys like filetypes). Servers without a file use nvim-lspconfig defaults.
--- ============================================================================
+-- ── servers ──
+-- per-server configs live in after/lsp/<name>.lua (:h lsp-config) — "after"
+-- so they win over nvim-lspconfig's bundled lsp/ files, which come later in
+-- 'runtimepath' and would otherwise take precedence on conflicting keys like
+-- filetypes. Servers without a file there run on nvim-lspconfig defaults.
 vim.lsp.enable({
 	"lua_ls",
 	"vue_ls",
