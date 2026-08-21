@@ -463,9 +463,6 @@ require("mini.clue").setup({
 	},
 })
 
--- restore buffers/window layout per-project on relaunch
-require("mini.sessions").setup({})
-
 require("mini.diff").setup({
 	view = {
 		style = "sign",
