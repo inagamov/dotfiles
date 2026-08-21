@@ -67,7 +67,8 @@ vim.api.nvim_create_user_command("Theme", function(o)
 	end)
 end, { nargs = "?", complete = names })
 
-apply(vim.fn.filereadable(theme_file) == 1 and vim.fn.readfile(theme_file)[1] or "evergarden", false)
+local saved_theme = vim.fn.filereadable(theme_file) == 1 and vim.fn.readfile(theme_file)[1] or nil
+apply(saved_theme ~= nil and saved_theme ~= "" and saved_theme or "evergarden", false)
 
 --
 -- ============================================================================
@@ -180,6 +181,7 @@ vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yankin
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
+vim.g.tmux_navigator_no_mappings = 1 -- we define our own <C-h/j/k/l> below
 vim.keymap.set("n", "<C-h>", "<cmd>TmuxNavigateLeft<CR>", { desc = "Move to left window/pane" })
 vim.keymap.set("n", "<C-j>", "<cmd>TmuxNavigateDown<CR>", { desc = "Move to bottom window/pane" })
 vim.keymap.set("n", "<C-k>", "<cmd>TmuxNavigateUp<CR>", { desc = "Move to top window/pane" })
@@ -219,10 +221,33 @@ end, { desc = "Toggle diagnostics" })
 local augroup = vim.api.nvim_create_augroup("UserConfig", { clear = true })
 
 -- Format on save (ONLY real file buffers, ONLY when efm is attached)
+-- efm's languages table says what efm CAN format; this list says what
+-- auto-formats on save (markdown/yaml/php stay manual — use <leader>oi)
+local format_on_save_ft = {
+	lua = true,
+	javascript = true,
+	javascriptreact = true,
+	typescript = true,
+	typescriptreact = true,
+	vue = true,
+	css = true,
+	scss = true,
+	html = true,
+	json = true,
+	jsonc = true,
+	sh = true,
+}
+
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = augroup,
 	pattern = "*",
 	callback = function(args)
+		if vim.o.diff then -- don't reformat files in diff/mergetool sessions
+			return
+		end
+		if not format_on_save_ft[vim.bo[args.buf].filetype] then
+			return
+		end
 		-- avoid formatting non-file buffers (helps prevent weird write prompts)
 		if vim.bo[args.buf].buftype ~= "" then
 			return
@@ -234,14 +259,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 			return
 		end
 
-		local has_efm = false
-		for _, c in ipairs(vim.lsp.get_clients({ bufnr = args.buf })) do
-			if c.name == "efm" then
-				has_efm = true
-				break
-			end
-		end
-		if not has_efm then
+		if #vim.lsp.get_clients({ bufnr = args.buf, name = "efm" }) == 0 then
 			return
 		end
 
@@ -368,6 +386,7 @@ require("nvim-treesitter").install({
 
 -- enable highlighting + treesitter indent per filetype
 vim.api.nvim_create_autocmd("FileType", {
+	group = augroup,
 	callback = function(args)
 		local ft = vim.bo[args.buf].filetype
 		local lang = vim.treesitter.language.get_lang(ft)
@@ -379,6 +398,7 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("PackChanged", {
+	group = augroup,
 	callback = function(ev)
 		if ev.data.spec.name == "nvim-treesitter" and ev.data.kind ~= "delete" then
 			require("nvim-treesitter").update()
@@ -526,7 +546,7 @@ require("mason").setup({})
 -- ============================================================================
 -- LSP, Linting, Formatting & Completion
 -- ============================================================================
-local augroup = vim.api.nvim_create_augroup("UserLsp", { clear = true })
+local lsp_augroup = vim.api.nvim_create_augroup("UserLsp", { clear = true })
 
 vim.o.winborder = "rounded" -- replaces the open_floating_preview patch
 
@@ -536,8 +556,8 @@ vim.filetype.add({ pattern = { [".*%.blade%.php"] = "blade" } })
 local diagnostic_signs = {
 	Error = "\u{f057} ",
 	Warn = "\u{f071} ",
-	Hint = "\u{ea61}",
-	Info = "\u{f05a}",
+	Hint = "\u{ea61} ",
+	Info = "\u{f05a} ",
 }
 
 vim.diagnostic.config({
@@ -571,7 +591,7 @@ local function organize_then_format(bufnr)
 	for client_id, res in pairs(results or {}) do
 		local client = vim.lsp.get_client_by_id(client_id)
 		for _, action in pairs(res.result or {}) do
-			if action.edit then
+			if action.edit and client then
 				vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
 			elseif action.command and client then
 				client:exec_cmd(action.command, { bufnr = bufnr })
@@ -579,7 +599,15 @@ local function organize_then_format(bufnr)
 		end
 	end
 
-	vim.lsp.buf.format({ bufnr = bufnr })
+	-- prefer efm (matches format-on-save); fall back to any client (e.g. dartls)
+	local has_efm = #vim.lsp.get_clients({ bufnr = bufnr, name = "efm" }) > 0
+	vim.lsp.buf.format({
+		bufnr = bufnr,
+		timeout_ms = 2000,
+		filter = function(c)
+			return not has_efm or c.name == "efm"
+		end,
+	})
 end
 
 local function lsp_on_attach(ev)
@@ -589,52 +617,54 @@ local function lsp_on_attach(ev)
 	end
 
 	local bufnr = ev.buf
-	local opts = { noremap = true, silent = true, buffer = bufnr }
+	local function map(lhs, rhs, desc)
+		vim.keymap.set("n", lhs, rhs, { noremap = true, silent = true, buffer = bufnr, desc = desc })
+	end
 
 	-- K, grn, gra, grr, gri are Neovim defaults — not remapped here
-	vim.keymap.set("n", "<leader>gd", function()
+	map("<leader>gd", function()
 		require("fzf-lua").lsp_definitions({ jump_to_single_result = true })
-	end, opts)
-	vim.keymap.set("n", "<leader>gD", vim.lsp.buf.definition, opts)
-	vim.keymap.set("n", "<leader>gS", function()
+	end, "Go to definition (fzf)")
+	map("<leader>gD", vim.lsp.buf.definition, "Go to definition")
+	map("<leader>gS", function()
 		vim.cmd("vsplit")
 		vim.lsp.buf.definition()
-	end, opts)
+	end, "Go to definition (vsplit)")
 
-	vim.keymap.set("n", "<leader>d", function()
+	map("<leader>d", function()
 		vim.diagnostic.open_float({ scope = "line" })
-	end, opts)
-	vim.keymap.set("n", "<leader>nd", function()
+	end, "Line diagnostics")
+	map("<leader>nd", function()
 		vim.diagnostic.jump({ count = 1, float = true })
-	end, opts)
-	vim.keymap.set("n", "<leader>pd", function()
+	end, "Next diagnostic")
+	map("<leader>pd", function()
 		vim.diagnostic.jump({ count = -1, float = true })
-	end, opts)
+	end, "Previous diagnostic")
 
-	vim.keymap.set("n", "<leader>fr", function()
+	map("<leader>fr", function()
 		require("fzf-lua").lsp_references()
-	end, opts)
-	vim.keymap.set("n", "<leader>ft", function()
+	end, "FZF LSP references")
+	map("<leader>ft", function()
 		require("fzf-lua").lsp_typedefs()
-	end, opts)
-	vim.keymap.set("n", "<leader>fs", function()
+	end, "FZF LSP type definitions")
+	map("<leader>fs", function()
 		require("fzf-lua").lsp_document_symbols()
-	end, opts)
-	vim.keymap.set("n", "<leader>fw", function()
+	end, "FZF document symbols")
+	map("<leader>fw", function()
 		require("fzf-lua").lsp_workspace_symbols()
-	end, opts)
-	vim.keymap.set("n", "<leader>fi", function()
+	end, "FZF workspace symbols")
+	map("<leader>fi", function()
 		require("fzf-lua").lsp_implementations()
-	end, opts)
+	end, "FZF LSP implementations")
 
 	if client:supports_method("textDocument/codeAction", bufnr) then
-		vim.keymap.set("n", "<leader>oi", function()
+		map("<leader>oi", function()
 			organize_then_format(bufnr)
-		end, opts)
+		end, "Organize imports & format")
 	end
 end
 
-vim.api.nvim_create_autocmd("LspAttach", { group = augroup, callback = lsp_on_attach })
+vim.api.nvim_create_autocmd("LspAttach", { group = lsp_augroup, callback = lsp_on_attach })
 
 vim.keymap.set("n", "<leader>q", function()
 	vim.diagnostic.setloclist({ open = true })
