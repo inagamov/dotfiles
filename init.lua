@@ -1,28 +1,38 @@
 vim.opt.termguicolors = true
 
--- installed early so it's available before colorscheme() runs below
--- (the rest of the plugin list is installed further down, near PLUGINS)
-vim.pack.add({ { src = "https://github.com/evergardentheme/nvim", name = "evergarden" } })
-
-require("evergarden").setup({
-	theme = {
-		variant = "fall", -- 'winter'|'fall'|'spring'|'summer'
-		accent = "green",
+local themes = {
+	evergarden = {
+		spec = { src = "https://github.com/evergardentheme/nvim", name = "evergarden" },
+		setup = function()
+			require("evergarden").setup({
+				theme = {
+					variant = "fall",
+					accent = "green",
+				},
+				editor = {
+					transparent_background = false,
+					sign = { color = "none" },
+					float = { color = "mantle", solid_border = false },
+					completion = { color = "surface0" },
+				},
+			})
+		end,
 	},
-	editor = {
-		transparent_background = false,
-		sign = { color = "none" },
-		float = {
-			color = "mantle",
-			solid_border = false,
-		},
-		completion = {
-			color = "surface0",
-		},
+	onedark = {
+		spec = { src = "https://github.com/navarasu/onedark.nvim" },
+		setup = function()
+			require("onedark").setup({ style = "darker" })
+		end,
 	},
-})
+}
 
-local function set_transparent() -- set UI component to transparent
+-- 2. install both
+vim.pack.add(vim.tbl_map(function(t)
+	return t.spec
+end, vim.tbl_values(themes)))
+
+-- 3. your transparency bit, unchanged
+local function set_transparent()
 	local groups = {
 		"Normal",
 		"NormalNC",
@@ -42,10 +52,45 @@ local function set_transparent() -- set UI component to transparent
 	end
 	vim.api.nvim_set_hl(0, "TabLineFill", { bg = "none", fg = "#767676" })
 end
-
 vim.api.nvim_create_autocmd("ColorScheme", { callback = set_transparent })
 
-vim.cmd.colorscheme("evergarden")
+-- 4. switching
+local theme_file = vim.fn.stdpath("data") .. "/theme.txt"
+local done = {}
+
+local function apply(name, save)
+	local t = themes[name]
+	if t and not done[name] then
+		done[name] = true
+		t.setup()
+	end
+	local ok, err = pcall(vim.cmd.colorscheme, name)
+	if not ok then
+		return vim.notify(err, vim.log.levels.ERROR)
+	end
+	if save then
+		vim.fn.writefile({ name }, theme_file)
+	end
+end
+
+local function names()
+	local n = vim.tbl_keys(themes)
+	table.sort(n)
+	return n
+end
+
+vim.api.nvim_create_user_command("Theme", function(o)
+	if o.args ~= "" then
+		return apply(o.args, true)
+	end
+	vim.ui.select(names(), { prompt = "Theme: " }, function(c)
+		if c then
+			apply(c, true)
+		end
+	end)
+end, { nargs = "?", complete = names })
+
+apply(vim.fn.filereadable(theme_file) == 1 and vim.fn.readfile(theme_file)[1] or "evergarden", false)
 
 --
 -- ============================================================================
@@ -474,41 +519,46 @@ end, { desc = "Git blame/show" })
 --
 -- lualine
 --
-require("lualine").setup({
-	options = {
-		theme = "evergarden", -- melange-nvim ships a dedicated lualine theme
-		icons_enabled = true,
-		component_separators = { left = "", right = "" },
-		section_separators = { left = "", right = "" },
-		globalstatus = false, -- keep per-window active/inactive styling
-	},
-	sections = {
-		lualine_a = { "mode" },
-		lualine_b = { { "branch", icon = "\u{e725}" } }, -- nf-dev-git_branch
-		lualine_c = { { "filename", path = 0 } },
-		lualine_x = {
-			function()
-				local size = vim.fn.getfsize(vim.fn.expand("%"))
-				if size < 0 then
-					return ""
-				elseif size < 1024 then
-					return size .. "B"
-				elseif size < 1024 * 1024 then
-					return string.format("%.1fK", size / 1024)
-				else
-					return string.format("%.1fM", size / 1024 / 1024)
-				end
-			end,
-			{ "filetype", icon_only = false },
+local function setup_lualine()
+	require("lualine").setup({
+		options = {
+			theme = "auto",
+			icons_enabled = true,
+			component_separators = { left = "", right = "" },
+			section_separators = { left = "", right = "" },
+			globalstatus = false, -- keep per-window active/inactive styling
 		},
-		lualine_y = { "location" }, -- %l:%c equivalent
-		lualine_z = { "progress" }, -- %P equivalent
-	},
-	inactive_sections = {
-		lualine_c = { { "filename", path = 0 } },
-		lualine_x = { "filetype" },
-	},
-})
+		sections = {
+			lualine_a = { "mode" },
+			lualine_b = { { "branch", icon = "\u{e725}" } }, -- nf-dev-git_branch
+			lualine_c = { { "filename", path = 0 } },
+			lualine_x = {
+				function()
+					local size = vim.fn.getfsize(vim.fn.expand("%"))
+					if size < 0 then
+						return ""
+					elseif size < 1024 then
+						return size .. "B"
+					elseif size < 1024 * 1024 then
+						return string.format("%.1fK", size / 1024)
+					else
+						return string.format("%.1fM", size / 1024 / 1024)
+					end
+				end,
+				{ "filetype", icon_only = false },
+			},
+			lualine_y = { "location" }, -- %l:%c equivalent
+			lualine_z = { "progress" }, -- %P equivalent
+		},
+		inactive_sections = {
+			lualine_c = { { "filename", path = 0 } },
+			lualine_x = { "filetype" },
+		},
+	})
+end
+
+setup_lualine()
+vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_lualine })
 
 --
 -- mason
