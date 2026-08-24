@@ -526,6 +526,9 @@ end, { desc = "FZF Diagnostics Document" })
 vim.keymap.set("n", "<leader>fX", function()
 	require("fzf-lua").diagnostics_workspace()
 end, { desc = "FZF Diagnostics Workspace" })
+vim.keymap.set("n", "<leader>gs", function()
+	require("fzf-lua").git_status()
+end, { desc = "FZF Git Status" })
 
 -- ── mini.nvim (clue · diff · git) ──
 require("mini.clue").setup({
