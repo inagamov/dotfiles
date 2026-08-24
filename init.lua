@@ -252,6 +252,54 @@ vim.keymap.set("n", "<leader>td", function()
 	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
 end, { desc = "Toggle diagnostics" })
 
+-- ── project tasks ──
+-- run tasks, defined per project in .tasks.lua at the project root:
+--   return { { label = "Flutter: Debug Local", cmd = { "flutter", "run", ... } }, ... }
+local function load_project_tasks()
+	local start = vim.api.nvim_buf_get_name(0)
+	start = start ~= "" and vim.fs.dirname(start) or vim.fn.getcwd()
+	local file = vim.fs.find(".tasks.lua", { upward = true, path = start })[1]
+	if not file then
+		return nil
+	end
+	local ok, tasks = pcall(dofile, file)
+	if not ok or type(tasks) ~= "table" then
+		vim.notify(".tasks.lua: " .. tostring(tasks), vim.log.levels.ERROR)
+		return nil
+	end
+	return tasks, vim.fs.dirname(file)
+end
+
+local function run_task(task, dir)
+	if vim.env.TMUX then
+		local shell_cmd = table.concat(vim.tbl_map(vim.fn.shellescape, task.cmd), " ")
+		-- keep the window open after exit so startup errors stay readable
+		shell_cmd = shell_cmd .. '; echo "[exit $?]"; read -r _'
+		vim.system({ "tmux", "split-window", "-h", "-c", dir, shell_cmd })
+	else
+		vim.cmd.vsplit()
+		vim.fn.jobstart(task.cmd, { term = true, cwd = dir })
+		vim.cmd.startinsert()
+	end
+end
+
+vim.keymap.set("n", "<leader>rt", function()
+	local tasks, dir = load_project_tasks()
+	if not tasks or #tasks == 0 then
+		return vim.notify("no .tasks.lua found in project", vim.log.levels.WARN)
+	end
+	vim.ui.select(tasks, {
+		prompt = "Task: ",
+		format_item = function(t)
+			return t.label
+		end,
+	}, function(task)
+		if task then
+			run_task(task, dir)
+		end
+	end)
+end, { desc = "Run project task" })
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ AUTOCMDS
 -- ═══════════════════════════════════════════════════════════════════════════
