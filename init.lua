@@ -489,6 +489,11 @@ vim.api.nvim_create_autocmd("PackChanged", {
 	end,
 })
 
+-- ── mini.icons ──
+local mini_icons = require("mini.icons")
+mini_icons.setup({})
+mini_icons.mock_nvim_web_devicons()
+
 -- ── nvim-tree ──
 require("nvim-tree").setup({
 	view = {
