@@ -253,11 +253,8 @@ vim.keymap.set("n", "<leader>td", function()
 end, { desc = "Toggle diagnostics" })
 
 -- ── project tasks ──
--- Zed-style run tasks, defined per project in .tasks.lua at the project root:
+-- run tasks, defined per project in .tasks.lua at the project root:
 --   return { { label = "Flutter: Debug Local", cmd = { "flutter", "run", ... } }, ... }
--- <leader>rt picks a task and runs it in a tmux pane beside the current one
--- (cwd = wherever .tasks.lua lives); outside tmux it falls back to a
--- :terminal in a split
 local function load_project_tasks()
 	local start = vim.api.nvim_buf_get_name(0)
 	start = start ~= "" and vim.fs.dirname(start) or vim.fn.getcwd()
