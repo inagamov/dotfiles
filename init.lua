@@ -307,22 +307,24 @@ end, { desc = "Run project task" })
 local augroup = vim.api.nvim_create_augroup("UserConfig", { clear = true })
 
 -- ── format on save ──
--- only real file buffers, only when efm is attached, never in diff mode.
--- efm's languages table says what efm CAN format; this list says what
--- auto-formats on save (markdown/yaml/php stay manual — use <leader>oi)
+-- only real file buffers, only when the mapped client is attached, never in
+-- diff mode. filetype → LSP client that formats it: efm for most languages,
+-- dartls for dart (efm has no dart config; dartls runs `dart format`).
+-- markdown/yaml/php stay manual — use <leader>oi
 local format_on_save_ft = {
-	lua = true,
-	javascript = true,
-	javascriptreact = true,
-	typescript = true,
-	typescriptreact = true,
-	vue = true,
-	css = true,
-	scss = true,
-	html = true,
-	json = true,
-	jsonc = true,
-	sh = true,
+	lua = "efm",
+	javascript = "efm",
+	javascriptreact = "efm",
+	typescript = "efm",
+	typescriptreact = "efm",
+	vue = "efm",
+	css = "efm",
+	scss = "efm",
+	html = "efm",
+	json = "efm",
+	jsonc = "efm",
+	sh = "efm",
+	dart = "dartls",
 }
 
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -332,7 +334,8 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 		if vim.o.diff then -- don't reformat files in diff/mergetool sessions
 			return
 		end
-		if not format_on_save_ft[vim.bo[args.buf].filetype] then
+		local client_name = format_on_save_ft[vim.bo[args.buf].filetype]
+		if not client_name then
 			return
 		end
 		-- avoid formatting non-file buffers (helps prevent weird write prompts)
@@ -346,7 +349,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 			return
 		end
 
-		if #vim.lsp.get_clients({ bufnr = args.buf, name = "efm" }) == 0 then
+		if #vim.lsp.get_clients({ bufnr = args.buf, name = client_name }) == 0 then
 			return
 		end
 
@@ -354,7 +357,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 			bufnr = args.buf,
 			timeout_ms = 2000,
 			filter = function(c)
-				return c.name == "efm"
+				return c.name == client_name
 			end,
 		})
 	end,
