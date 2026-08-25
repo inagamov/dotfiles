@@ -746,6 +746,12 @@ local function lsp_on_attach(ev)
 		require("fzf-lua").lsp_implementations()
 	end, "FZF LSP implementations")
 
+	if client:supports_method("textDocument/inlayHint", bufnr) then
+		map("<leader>ih", function()
+			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+		end, "Toggle inlay hints")
+	end
+
 	if client:supports_method("textDocument/codeAction", bufnr) then
 		map("<leader>oi", function()
 			organize_then_format(bufnr)
