@@ -709,10 +709,10 @@ local function lsp_on_attach(ev)
 
 	-- K, grn, gra, grr, gri are Neovim defaults — not remapped here
 	map("gd", function()
-		require("fzf-lua").lsp_definitions({ jump_to_single_result = true })
+		require("fzf-lua").lsp_definitions({ jump1 = true })
 	end, "Go to definition (fzf)")
 	map("<leader>gd", function()
-		require("fzf-lua").lsp_definitions({ jump_to_single_result = true })
+		require("fzf-lua").lsp_definitions({ jump1 = true })
 	end, "Go to definition (fzf)")
 	map("<leader>gD", vim.lsp.buf.definition, "Go to definition")
 	map("<leader>gS", function()
