@@ -46,21 +46,6 @@ local themes = {
 			require("onedark").setup({ style = "darker" })
 		end,
 	},
-	vesper = {
-		spec = { src = "https://github.com/datsfilipe/vesper.nvim" },
-		setup = function()
-			require("vesper").setup({
-				transparent = false,
-				italics = {
-					comments = true,
-					keywords = true,
-					functions = false,
-					strings = false,
-					variables = false,
-				},
-			})
-		end,
-	},
 }
 
 -- install theme
