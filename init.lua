@@ -593,42 +593,35 @@ require("smear_cursor").setup({
 })
 
 -- ── lualine ──
--- setup re-runs on ColorScheme so the statusline follows :Theme switches
 local function setup_lualine()
 	require("lualine").setup({
 		options = {
-			theme = "auto",
-			icons_enabled = true,
-			component_separators = { left = "", right = "" },
-			section_separators = { left = "", right = "" },
-			globalstatus = false, -- keep per-window active/inactive styling
+			component_separators = "",
+			section_separators = { left = "\u{e0b4}", right = "\u{e0b6}" },
+			globalstatus = false,
 		},
 		sections = {
-			lualine_a = { "mode" },
-			lualine_b = { { "branch", icon = "\u{e725}" } }, -- nf-dev-git_branch
-			lualine_c = { { "filename", path = 0 } },
-			lualine_x = {
-				function()
-					local size = vim.fn.getfsize(vim.fn.expand("%"))
-					if size < 0 then
-						return ""
-					elseif size < 1024 then
-						return size .. "B"
-					elseif size < 1024 * 1024 then
-						return string.format("%.1fK", size / 1024)
-					else
-						return string.format("%.1fM", size / 1024 / 1024)
-					end
-				end,
-				{ "filetype", icon_only = false },
+			lualine_a = { { "mode", separator = { left = "\u{e0b6}" }, right_padding = 2 } },
+			lualine_b = { { "branch", icon = "\u{e725}" }, { "filename", path = 1 } },
+			lualine_c = {
+				"%=",
 			},
-			lualine_y = { "location" }, -- %l:%c equivalent
-			lualine_z = { "progress" }, -- %P equivalent
+			lualine_x = {},
+			lualine_y = { "filesize", "filetype", "progress" },
+			lualine_z = {
+				{ "location", separator = { right = "\u{e0b4}" }, left_padding = 2 },
+			},
 		},
 		inactive_sections = {
-			lualine_c = { { "filename", path = 0 } },
-			lualine_x = { "filetype" },
+			lualine_a = { { "filename", path = 1 } },
+			lualine_b = {},
+			lualine_c = {},
+			lualine_x = {},
+			lualine_y = {},
+			lualine_z = { "location" },
 		},
+		tabline = {},
+		extensions = {},
 	})
 end
 
