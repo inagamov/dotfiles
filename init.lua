@@ -1,137 +1,59 @@
--- ═══════════════════════════════════════════════════════════════════════════
---
---   init.lua · a single-file Neovim config (0.12+, native-first)
---
---   vim.pack for plugins · vim.lsp for servers · treesitter for syntax
---   efm for linting & formatting · per-server configs in after/lsp/
---
---   ¶ Theme      colorschemes + :Theme picker
---   ¶ Options    editor behavior
---   ¶ Keymaps    global mappings (leader = space)
---   ¶ Autocmds   format-on-save, yank highlight, cursor restore
---   ¶ Plugins    vim.pack + per-plugin setup
---   ¶ LSP        diagnostics, formatting, completion, servers
---
---   jump to any section by searching for "¶"
---
--- ═══════════════════════════════════════════════════════════════════════════
-
 vim.opt.termguicolors = true
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- ¶ THEME · colorschemes + :Theme picker, choice persisted across sessions
+-- ¶ THEME
 -- ═══════════════════════════════════════════════════════════════════════════
 
-local themes = {
-	evergarden = {
-		spec = { src = "https://github.com/evergardentheme/nvim", name = "evergarden" },
-		setup = function()
-			require("evergarden").setup({
-				theme = {
-					variant = "fall",
-					accent = "green",
-				},
-				editor = {
-					transparent_background = false,
-					sign = { color = "none" },
-					float = { color = "mantle", solid_border = false },
-					completion = { color = "surface0" },
-				},
-			})
-		end,
-	},
-	onedark = {
-		spec = { src = "https://github.com/navarasu/onedark.nvim" },
-		setup = function()
-			require("onedark").setup({ style = "darker" })
-		end,
-	},
-}
+vim.pack.add({
+	"https://github.com/navarasu/onedark.nvim",
+	"https://github.com/ellisonleao/gruvbox.nvim",
+})
 
--- install theme
-vim.pack.add(vim.tbl_map(function(t)
-	return t.spec
-end, vim.tbl_values(themes)))
+require("onedark").setup({
+	style = "darker",
+})
 
--- theme switching
-local theme_file = vim.fn.stdpath("data") .. "/theme.txt"
-local done = {}
-
-local function apply(name, save)
-	local t = themes[name]
-	if t and not done[name] then
-		done[name] = true
-		t.setup()
-	end
-	local ok, err = pcall(vim.cmd.colorscheme, name)
-	if not ok then
-		return vim.notify(err, vim.log.levels.ERROR)
-	end
-	if save then
-		vim.fn.writefile({ name }, theme_file)
-	end
-end
-
-local function names()
-	local n = vim.tbl_keys(themes)
-	table.sort(n)
-	return n
-end
-
-vim.api.nvim_create_user_command("Theme", function(o)
-	if o.args ~= "" then
-		return apply(o.args, true)
-	end
-	vim.ui.select(names(), { prompt = "Theme: " }, function(c)
-		if c then
-			apply(c, true)
-		end
-	end)
-end, { nargs = "?", complete = names })
-
-local saved_theme = vim.fn.filereadable(theme_file) == 1 and vim.fn.readfile(theme_file)[1] or nil
-apply(saved_theme ~= nil and saved_theme ~= "" and saved_theme or "evergarden", false)
+vim.cmd.colorscheme("onedark")
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ OPTIONS · editor behavior
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- ── lines & scrolling ──
-vim.opt.number = true -- line number
-vim.opt.relativenumber = true -- relative line numbers
-vim.opt.cursorline = true -- highlight current line
-vim.opt.wrap = false -- do not wrap lines by default
-vim.opt.scrolloff = 10 -- keep 10 lines above/below cursor
-vim.opt.sidescrolloff = 10 -- keep 10 lines to left/right of cursor
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.cursorline = true
+vim.opt.wrap = false
+vim.opt.scrolloff = 10
+vim.opt.sidescrolloff = 10
 
 -- ── indentation ──
-vim.opt.tabstop = 2 -- tabwidth
-vim.opt.shiftwidth = 2 -- indent width
-vim.opt.softtabstop = 2 -- soft tab stop not tabs on tab/backspace
-vim.opt.expandtab = true -- use spaces instead of tabs
-vim.opt.smartindent = true -- smart auto-indent
-vim.opt.autoindent = true -- copy indent from current line
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.softtabstop = 2
+vim.opt.expandtab = true
+vim.opt.smartindent = true
+vim.opt.autoindent = true
 
 -- ── search ──
-vim.opt.ignorecase = true -- case insensitive search
-vim.opt.smartcase = true -- case sensitive if uppercase in string
-vim.opt.hlsearch = true -- highlight search matches
-vim.opt.incsearch = true -- show matches as you type
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.hlsearch = true
+vim.opt.incsearch = false
 
 -- ── ui ──
-vim.opt.signcolumn = "yes" -- always show a sign column
-vim.opt.showmatch = true -- highlights matching brackets
-vim.opt.cmdheight = 1 -- single line command line
-vim.opt.completeopt = "menuone,noinsert,noselect" -- completion options
-vim.opt.showmode = false -- do not show the mode, instead have it in statusline
-vim.opt.laststatus = 2 -- per-window statusline (pairs with lualine's globalstatus = false)
-vim.opt.pumheight = 10 -- popup menu height
-vim.opt.pumblend = 10 -- popup menu transparency
-vim.opt.winblend = 0 -- floating window transparency
-vim.opt.conceallevel = 2 -- obsidian requirement
-vim.opt.concealcursor = "" -- do not hide cursorline in markup
-vim.opt.synmaxcol = 300 -- syntax highlighting limit
-vim.opt.fillchars = { eob = " " } -- hide "~" on empty lines
+vim.opt.signcolumn = "yes"
+vim.opt.showmatch = true
+vim.opt.cmdheight = 1
+vim.opt.completeopt = "menuone,noinsert,noselect"
+vim.opt.showmode = false
+vim.opt.laststatus = 2
+vim.opt.pumheight = 10
+vim.opt.pumblend = 10
+vim.opt.winblend = 0
+vim.opt.conceallevel = 2
+vim.opt.concealcursor = ""
+vim.opt.synmaxcol = 300
+vim.opt.fillchars = { eob = " " }
 
 -- ── files, undo & timing ──
 local undodir = vim.fn.expand("~/.vim/undodir")
@@ -141,28 +63,28 @@ then
 	vim.fn.mkdir(undodir, "p")
 end
 
-vim.opt.backup = false -- do not create a backup file
-vim.opt.writebackup = false -- do not write to a backup file
-vim.opt.swapfile = false -- do not create a swapfile
-vim.opt.undofile = true -- do create an undo file
-vim.opt.undodir = undodir -- set the undo directory
-vim.opt.updatetime = 300 -- faster completion
-vim.opt.timeoutlen = 500 -- timeout duration
-vim.opt.ttimeoutlen = 50 -- key code timeout
-vim.opt.autoread = true -- auto-reload changes if outside of neovim
-vim.opt.autowrite = false -- do not auto-save
+vim.opt.backup = false
+vim.opt.writebackup = false
+vim.opt.swapfile = false
+vim.opt.undofile = true
+vim.opt.undodir = undodir
+vim.opt.updatetime = 300
+vim.opt.timeoutlen = 500
+vim.opt.ttimeoutlen = 50
+vim.opt.autoread = true
+vim.opt.autowrite = false
 
 -- ── behavior ──
-vim.opt.hidden = true -- allow hidden buffers
-vim.opt.errorbells = false -- no error sounds
-vim.opt.backspace = "indent,eol,start" -- better backspace behaviour
-vim.opt.autochdir = false -- do not autochange directories
-vim.opt.iskeyword:append("-") -- include - in words
-vim.opt.path:append("**") -- include subdirs in search
-vim.opt.selection = "inclusive" -- include last char in selection
-vim.opt.mouse = "a" -- enable mouse support
-vim.opt.clipboard:append("unnamedplus") -- use system clipboard
-vim.opt.modifiable = true -- allow buffer modifications
+vim.opt.hidden = true
+vim.opt.errorbells = false
+vim.opt.backspace = "indent,eol,start"
+vim.opt.autochdir = false
+vim.opt.iskeyword:append("-")
+vim.opt.path:append("**")
+vim.opt.selection = "inclusive"
+vim.opt.mouse = "a"
+vim.opt.clipboard:append("unnamedplus")
+vim.opt.modifiable = true
 
 -- ── cursor ──
 vim.opt.guicursor =
@@ -175,22 +97,22 @@ vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- use treesitter for foldi
 vim.opt.foldlevel = 99 -- start with all folds open
 
 -- ── splits ──
-vim.opt.splitbelow = true -- horizontal splits go below
-vim.opt.splitright = true -- vertical splits go right
+vim.opt.splitbelow = true
+vim.opt.splitright = true
 
 -- ── cmdline & performance ──
-vim.opt.wildmenu = true -- tab completion
-vim.opt.wildmode = "longest:full,full" -- complete longest common match, full completion list, cycle through with Tab
-vim.opt.diffopt:append("linematch:60") -- improve diff display
-vim.opt.redrawtime = 10000 -- increase neovim redraw tolerance
-vim.opt.maxmempattern = 20000 -- increase max memory
+vim.opt.wildmenu = true
+vim.opt.wildmode = "longest:full,full"
+vim.opt.diffopt:append("linematch:60")
+vim.opt.redrawtime = 10000
+vim.opt.maxmempattern = 20000
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ KEYMAPS · leader = space
 -- ═══════════════════════════════════════════════════════════════════════════
 
-vim.g.mapleader = " " -- space for leader
-vim.g.maplocalleader = " " -- space for localleader
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 -- ── movement & search ──
 -- better movement in wrapped text
@@ -217,7 +139,7 @@ vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yankin
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
-vim.g.tmux_navigator_no_mappings = 1 -- we define our own <C-h/j/k/l> below
+vim.g.tmux_navigator_no_mappings = 1
 vim.keymap.set("n", "<C-h>", "<cmd>TmuxNavigateLeft<CR>", { desc = "Move to left window/pane" })
 vim.keymap.set("n", "<C-j>", "<cmd>TmuxNavigateDown<CR>", { desc = "Move to bottom window/pane" })
 vim.keymap.set("n", "<C-k>", "<cmd>TmuxNavigateUp<CR>", { desc = "Move to top window/pane" })
@@ -225,12 +147,9 @@ vim.keymap.set("n", "<C-l>", "<cmd>TmuxNavigateRight<CR>", { desc = "Move to rig
 
 vim.keymap.set("n", "<leader>sv", ":vsplit<CR>", { desc = "Split window vertically" })
 vim.keymap.set("n", "<leader>sh", ":split<CR>", { desc = "Split window horizontally" })
-vim.keymap.set("n", "<C-Up>", ":resize +2<CR>", { desc = "Increase window height" })
-vim.keymap.set("n", "<C-Down>", ":resize -2<CR>", { desc = "Decrease window height" })
-vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease window width" })
-vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>", { desc = "Increase window width" })
 
 -- ── editing ──
+-- FIXME:
 vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
 vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", { desc = "Move line up" })
 vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
@@ -242,12 +161,13 @@ vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 vim.keymap.set("n", "J", "mzJ`z", { desc = "Join lines and keep cursor position" })
 
 -- ── utility ──
-vim.keymap.set("n", "<leader>pa", function() -- show file path
+vim.keymap.set("n", "<leader>pa", function()
 	local path = vim.fn.expand("%:p")
 	vim.fn.setreg("+", path)
 	print("file:", path)
 end, { desc = "Copy full file path" })
 
+-- TODO: ?
 vim.keymap.set("n", "<leader>td", function()
 	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
 end, { desc = "Toggle diagnostics" })
@@ -255,47 +175,73 @@ end, { desc = "Toggle diagnostics" })
 -- ── project tasks ──
 -- run tasks, defined per project in .tasks.lua at the project root:
 --   return { { label = "Flutter: Debug Local", cmd = { "flutter", "run", ... } }, ... }
-local function load_project_tasks()
-	local start = vim.api.nvim_buf_get_name(0)
-	start = start ~= "" and vim.fs.dirname(start) or vim.fn.getcwd()
-	local file = vim.fs.find(".tasks.lua", { upward = true, path = start })[1]
-	if not file then
-		return nil
-	end
-	local ok, tasks = pcall(dofile, file)
-	if not ok or type(tasks) ~= "table" then
-		vim.notify(".tasks.lua: " .. tostring(tasks), vim.log.levels.ERROR)
-		return nil
-	end
-	return tasks, vim.fs.dirname(file)
-end
-
-local function run_task(task, dir)
-	if vim.env.TMUX then
-		local shell_cmd = table.concat(vim.tbl_map(vim.fn.shellescape, task.cmd), " ")
-		-- keep the window open after exit so startup errors stay readable
-		shell_cmd = shell_cmd .. '; echo "[exit $?]"; read -r _'
-		vim.system({ "tmux", "split-window", "-h", "-c", dir, shell_cmd })
-	else
-		vim.cmd.vsplit()
-		vim.fn.jobstart(task.cmd, { term = true, cwd = dir })
-		vim.cmd.startinsert()
-	end
-end
+-- local function load_project_tasks()
+-- 	local start = vim.api.nvim_buf_get_name(0)
+-- 	start = start ~= "" and vim.fs.dirname(start) or vim.fn.getcwd()
+-- 	local file = vim.fs.find(".tasks.lua", { upward = true, path = start })[1]
+-- 	if not file then
+-- 		return nil
+-- 	end
+-- 	local ok, tasks = pcall(dofile, file)
+-- 	if not ok or type(tasks) ~= "table" then
+-- 		vim.notify(".tasks.lua: " .. tostring(tasks), vim.log.levels.ERROR)
+-- 		return nil
+-- 	end
+-- 	return tasks, vim.fs.dirname(file)
+-- end
+--
+-- local function run_task(task, dir)
+-- 	if vim.env.TMUX then
+-- 		local shell_cmd = table.concat(vim.tbl_map(vim.fn.shellescape, task.cmd), " ")
+-- 		-- keep the window open after exit so startup errors stay readable
+-- 		shell_cmd = shell_cmd .. '; echo "[exit $?]"; read -r _'
+-- 		vim.system({ "tmux", "split-window", "-h", "-c", dir, shell_cmd })
+-- 	else
+-- 		vim.cmd.vsplit()
+-- 		vim.fn.jobstart(task.cmd, { term = true, cwd = dir })
+-- 		vim.cmd.startinsert()
+-- 	end
+-- end
+--
+-- vim.keymap.set("n", "<leader>rt", function()
+-- 	local tasks, dir = load_project_tasks()
+-- 	if not tasks or #tasks == 0 then
+-- 		return vim.notify("no .tasks.lua found in project", vim.log.levels.WARN)
+-- 	end
+-- 	vim.ui.select(tasks, {
+-- 		prompt = "Task: ",
+-- 		format_item = function(t)
+-- 			return t.label
+-- 		end,
+-- 	}, function(task)
+-- 		if task then
+-- 			run_task(task, dir)
+-- 		end
+-- 	end)
+-- end, { desc = "Run project task" })
 
 vim.keymap.set("n", "<leader>rt", function()
-	local tasks, dir = load_project_tasks()
-	if not tasks or #tasks == 0 then
-		return vim.notify("no .tasks.lua found in project", vim.log.levels.WARN)
+	local dir = vim.fs.root(0, ".tasks.lua")
+	local ok, tasks = pcall(dofile, dir and vim.fs.joinpath(dir, ".tasks.lua") or "")
+	if not ok or type(tasks) ~= "table" or #tasks == 0 then
+		return vim.notify("no valid .tasks.lua in project", vim.log.levels.WARN)
 	end
 	vim.ui.select(tasks, {
 		prompt = "Task: ",
 		format_item = function(t)
 			return t.label
 		end,
-	}, function(task)
-		if task then
-			run_task(task, dir)
+	}, function(t)
+		if not t then
+			return
+		end
+		if vim.env.TMUX then
+			local cmd = table.concat(vim.tbl_map(vim.fn.shellescape, t.cmd), " ")
+			vim.system({ "tmux", "split-window", "-h", "-c", dir, cmd .. '; echo "[exit $?]"; read -r _' })
+		else
+			vim.cmd.vsplit()
+			vim.fn.jobstart(t.cmd, { term = true, cwd = dir })
+			vim.cmd.startinsert()
 		end
 	end)
 end, { desc = "Run project task" })
@@ -515,7 +461,11 @@ vim.keymap.set("n", "<leader>e", function()
 end, { desc = "Toggle NvimTree" })
 
 -- ── fzf-lua ──
-require("fzf-lua").setup({})
+require("fzf-lua").setup({
+	grep = {
+		rg_opts = "--fixed-strings --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e",
+	},
+})
 
 vim.keymap.set("n", "<leader>ff", function()
 	require("fzf-lua").files()

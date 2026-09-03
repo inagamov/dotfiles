@@ -9,13 +9,13 @@
       "rev": "678debafc5866958d815438c7d8ec014e22f8d94",
       "src": "https://github.com/creativenull/efmls-configs-nvim"
     },
-    "evergarden": {
-      "rev": "6a47a90e5caf1b21e54ff7967017c255bab80fdd",
-      "src": "https://github.com/evergardentheme/nvim"
-    },
     "fzf-lua": {
       "rev": "05e44d38de0a79c11fba5f7bf8138791b1dbdd1e",
       "src": "https://www.github.com/ibhagwan/fzf-lua"
+    },
+    "gruvbox.nvim": {
+      "rev": "154eb5ff5b96d0641307113fa385eaf0d36d9796",
+      "src": "https://github.com/ellisonleao/gruvbox.nvim"
     },
     "lualine.nvim": {
       "rev": "221ce6b2d999187044529f49da6554a92f740a96",
