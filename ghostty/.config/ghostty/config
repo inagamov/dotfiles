@@ -1,0 +1,26 @@
+theme = GitHub Dark
+#background = #0e1014
+background = #242424
+background-opacity = 1
+background-blur = 0
+window-padding-color = extend
+
+font-family = JetBrainsMono Nerd Font Mono
+font-size = 18
+# font-thicken = true
+# font-thicken-strength = 1
+# adjust-cell-height = 1
+
+cursor-style = block
+cursor-style-blink = false
+shell-integration-features = no-cursor
+# adjust-cell-height = 35%
+# mouse-scroll-multiplier = 2
+
+window-padding-balance = true
+window-save-state = always
+
+copy-on-select = clipboard
+
+#custom-shader = ~/.config/ghostty/shaders/crt.glsl
+#custom-shader-animation = false
