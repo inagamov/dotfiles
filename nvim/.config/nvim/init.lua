@@ -5,15 +5,17 @@ vim.opt.termguicolors = true
 -- ═══════════════════════════════════════════════════════════════════════════
 
 vim.pack.add({
-	"https://github.com/navarasu/onedark.nvim",
+	-- "https://github.com/navarasu/onedark.nvim",
 	"https://github.com/ellisonleao/gruvbox.nvim",
 })
 
-require("onedark").setup({
-	style = "darker",
-})
+-- require("onedark").setup({
+-- 	style = "darker",
+-- })
 
-vim.cmd.colorscheme("onedark")
+require("gruvbox").setup({ transparent_mode = true })
+
+vim.cmd.colorscheme("gruvbox")
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ OPTIONS · editor behavior
@@ -354,7 +356,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- ═══════════════════════════════════════════════════════════════════════════
 
 vim.pack.add({
-	"https://www.github.com/echasnovski/mini.nvim",
+	"https://www.github.com/echasnovski/mini.icons",
 	"https://github.com/nvim-lualine/lualine.nvim",
 	"https://www.github.com/ibhagwan/fzf-lua",
 	"https://www.github.com/nvim-tree/nvim-tree.lua",
@@ -363,6 +365,8 @@ vim.pack.add({
 		version = "main",
 	},
 	"https://github.com/sphamba/smear-cursor.nvim",
+	"https://github.com/lewis6991/gitsigns.nvim",
+	"https://github.com/tpope/vim-fugitive",
 	-- Language Server Protocols
 	"https://www.github.com/neovim/nvim-lspconfig",
 	"https://github.com/mason-org/mason.nvim",
@@ -489,46 +493,23 @@ vim.keymap.set("n", "<leader>gs", function()
 	require("fzf-lua").git_status()
 end, { desc = "FZF Git Status" })
 
--- ── mini.nvim (clue · diff · git) ──
-require("mini.clue").setup({
-	triggers = {
-		{ mode = "n", keys = "<Leader>" },
-		{ mode = "x", keys = "<Leader>" },
-		{ mode = "n", keys = "g" },
-		{ mode = "n", keys = "[" },
-		{ mode = "n", keys = "]" },
-	},
-	clues = {
-		require("mini.clue").gen_clues.builtin_completion(),
-	},
+-- ── gitsigns (hunk signs · hunk actions · inline blame) ──
+require("gitsigns").setup({
+	current_line_blame = true,
+	on_attach = function(bufnr)
+		local gs = require("gitsigns")
+		local function map(mode, lhs, rhs, desc)
+			vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
+		end
+
+		map("n", "<leader>j", function()
+			gs.nav_hunk("next")
+		end, "Next git hunk")
+		map("n", "<leader>k", function()
+			gs.nav_hunk("prev")
+		end, "Prev git hunk")
+	end,
 })
-
-require("mini.diff").setup({
-	view = {
-		style = "sign",
-		signs = { add = "▎", change = "▎", delete = "▎" },
-	},
-})
-
-require("mini.git").setup({})
-
-local MiniDiff = require("mini.diff")
-
-vim.keymap.set("n", "]h", function()
-	MiniDiff.goto_hunk("next")
-end, { desc = "Next git hunk" })
-
-vim.keymap.set("n", "[h", function()
-	MiniDiff.goto_hunk("prev")
-end, { desc = "Prev git hunk" })
-
-vim.keymap.set("n", "<leader>hp", function()
-	MiniDiff.toggle_overlay()
-end, { desc = "Preview diff overlay" })
-
-vim.keymap.set("n", "<leader>hb", function()
-	require("mini.git").show_at_cursor()
-end, { desc = "Git blame/show" })
 
 -- ── smear-cursor ──
 require("smear_cursor").setup({
