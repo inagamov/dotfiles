@@ -62,12 +62,12 @@ on-mode-changed = []
     preset = 'qwerty'
 
 [gaps]
-    inner.horizontal = [{ monitor.built-in = 8 }, 8]
-    inner.vertical =   [{ monitor.built-in = 8 }, 8]
-    outer.left =       [{ monitor.built-in = 8 }, 8]
-    outer.bottom =     [{ monitor.built-in = 8 }, 8]
-    outer.top =        [{ monitor.built-in = 8 }, 8]
-    outer.right =      [{ monitor.built-in = 8 }, 8]
+    inner.horizontal = [{ monitor.built-in = 8 }, 16]
+    inner.vertical =   [{ monitor.built-in = 8 }, 16]
+    outer.left =       [{ monitor.built-in = 8 }, 16]
+    outer.bottom =     [{ monitor.built-in = 8 }, 16]
+    outer.top =        [{ monitor.built-in = 8 }, 16]
+    outer.right =      [{ monitor.built-in = 8 }, 16]
 
 #[[on-window-detected]]
 #if.app-id = 'com.apple.finder'
