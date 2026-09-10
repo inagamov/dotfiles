@@ -44,16 +44,16 @@ vim.opt.incsearch = false
 
 -- ── ui ──
 vim.opt.signcolumn = "yes"
+vim.opt.winborder = "rounded"
 vim.opt.showmatch = true
 vim.opt.cmdheight = 1
-vim.opt.completeopt = "menuone,noinsert,noselect"
+-- vim.opt.completeopt = "menuone,noinsert,noselect"
 vim.opt.showmode = false
 vim.opt.laststatus = 2
 vim.opt.pumheight = 10
 vim.opt.pumblend = 10
 vim.opt.winblend = 0
-vim.opt.conceallevel = 2
-vim.opt.concealcursor = ""
+vim.opt.conceallevel = 0
 vim.opt.synmaxcol = 300
 vim.opt.fillchars = { eob = " " }
 
@@ -169,59 +169,9 @@ vim.keymap.set("n", "<leader>pa", function()
 	print("file:", path)
 end, { desc = "Copy full file path" })
 
--- TODO: ?
-vim.keymap.set("n", "<leader>td", function()
-	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
-end, { desc = "Toggle diagnostics" })
-
 -- ── project tasks ──
 -- run tasks, defined per project in .tasks.lua at the project root:
 --   return { { label = "Flutter: Debug Local", cmd = { "flutter", "run", ... } }, ... }
--- local function load_project_tasks()
--- 	local start = vim.api.nvim_buf_get_name(0)
--- 	start = start ~= "" and vim.fs.dirname(start) or vim.fn.getcwd()
--- 	local file = vim.fs.find(".tasks.lua", { upward = true, path = start })[1]
--- 	if not file then
--- 		return nil
--- 	end
--- 	local ok, tasks = pcall(dofile, file)
--- 	if not ok or type(tasks) ~= "table" then
--- 		vim.notify(".tasks.lua: " .. tostring(tasks), vim.log.levels.ERROR)
--- 		return nil
--- 	end
--- 	return tasks, vim.fs.dirname(file)
--- end
---
--- local function run_task(task, dir)
--- 	if vim.env.TMUX then
--- 		local shell_cmd = table.concat(vim.tbl_map(vim.fn.shellescape, task.cmd), " ")
--- 		-- keep the window open after exit so startup errors stay readable
--- 		shell_cmd = shell_cmd .. '; echo "[exit $?]"; read -r _'
--- 		vim.system({ "tmux", "split-window", "-h", "-c", dir, shell_cmd })
--- 	else
--- 		vim.cmd.vsplit()
--- 		vim.fn.jobstart(task.cmd, { term = true, cwd = dir })
--- 		vim.cmd.startinsert()
--- 	end
--- end
---
--- vim.keymap.set("n", "<leader>rt", function()
--- 	local tasks, dir = load_project_tasks()
--- 	if not tasks or #tasks == 0 then
--- 		return vim.notify("no .tasks.lua found in project", vim.log.levels.WARN)
--- 	end
--- 	vim.ui.select(tasks, {
--- 		prompt = "Task: ",
--- 		format_item = function(t)
--- 			return t.label
--- 		end,
--- 	}, function(task)
--- 		if task then
--- 			run_task(task, dir)
--- 		end
--- 	end)
--- end, { desc = "Run project task" })
-
 vim.keymap.set("n", "<leader>rt", function()
 	local dir = vim.fs.root(0, ".tasks.lua")
 	local ok, tasks = pcall(dofile, dir and vim.fs.joinpath(dir, ".tasks.lua") or "")
@@ -253,63 +203,6 @@ end, { desc = "Run project task" })
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local augroup = vim.api.nvim_create_augroup("UserConfig", { clear = true })
-
--- ── format on save ──
--- only real file buffers, only when the mapped client is attached, never in
--- diff mode. filetype → LSP client that formats it: efm for most languages,
--- dartls for dart (efm has no dart config; dartls runs `dart format`).
--- markdown/yaml/php stay manual — use <leader>oi
-local format_on_save_ft = {
-	lua = "efm",
-	javascript = "efm",
-	javascriptreact = "efm",
-	typescript = "efm",
-	typescriptreact = "efm",
-	vue = "efm",
-	css = "efm",
-	scss = "efm",
-	html = "efm",
-	json = "efm",
-	jsonc = "efm",
-	sh = "efm",
-	dart = "dartls",
-}
-
-vim.api.nvim_create_autocmd("BufWritePre", {
-	group = augroup,
-	pattern = "*",
-	callback = function(args)
-		if vim.o.diff then -- don't reformat files in diff/mergetool sessions
-			return
-		end
-		local client_name = format_on_save_ft[vim.bo[args.buf].filetype]
-		if not client_name then
-			return
-		end
-		-- avoid formatting non-file buffers (helps prevent weird write prompts)
-		if vim.bo[args.buf].buftype ~= "" then
-			return
-		end
-		if not vim.bo[args.buf].modifiable then
-			return
-		end
-		if vim.api.nvim_buf_get_name(args.buf) == "" then
-			return
-		end
-
-		if #vim.lsp.get_clients({ bufnr = args.buf, name = client_name }) == 0 then
-			return
-		end
-
-		pcall(vim.lsp.buf.format, {
-			bufnr = args.buf,
-			timeout_ms = 2000,
-			filter = function(c)
-				return c.name == client_name
-			end,
-		})
-	end,
-})
 
 -- ── highlight on yank ──
 vim.api.nvim_create_autocmd("TextYankPost", {
@@ -414,6 +307,9 @@ require("nvim-treesitter").install({
 	"gitattributes",
 	"diff",
 
+	-- rust
+	"rust",
+
 	-- docs & notes
 	"markdown",
 	"markdown_inline",
@@ -489,9 +385,6 @@ end, { desc = "FZF Diagnostics Document" })
 vim.keymap.set("n", "<leader>fX", function()
 	require("fzf-lua").diagnostics_workspace()
 end, { desc = "FZF Diagnostics Workspace" })
-vim.keymap.set("n", "<leader>gs", function()
-	require("fzf-lua").git_status()
-end, { desc = "FZF Git Status" })
 
 -- ── gitsigns (hunk signs · hunk actions · inline blame) ──
 require("gitsigns").setup({
@@ -508,6 +401,10 @@ require("gitsigns").setup({
 		map("n", "<leader>k", function()
 			gs.nav_hunk("prev")
 		end, "Prev git hunk")
+
+		map("n", "<leader>h", function()
+			gs.preview_hunk_inline()
+		end, "Preview hunk inline")
 	end,
 })
 
@@ -524,40 +421,35 @@ require("smear_cursor").setup({
 })
 
 -- ── lualine ──
-local function setup_lualine()
-	require("lualine").setup({
-		options = {
-			component_separators = "",
-			section_separators = { left = "\u{e0b4}", right = "\u{e0b6}" },
-			globalstatus = false,
+require("lualine").setup({
+	options = {
+		component_separators = "",
+		section_separators = { left = "\u{e0b4}", right = "\u{e0b6}" },
+		globalstatus = false,
+	},
+	sections = {
+		lualine_a = { { "mode", separator = { left = "\u{e0b6}" }, right_padding = 2 } },
+		lualine_b = { { "branch", icon = "\u{e725}" }, { "filename", path = 1 } },
+		lualine_c = {
+			"%=",
 		},
-		sections = {
-			lualine_a = { { "mode", separator = { left = "\u{e0b6}" }, right_padding = 2 } },
-			lualine_b = { { "branch", icon = "\u{e725}" }, { "filename", path = 1 } },
-			lualine_c = {
-				"%=",
-			},
-			lualine_x = {},
-			lualine_y = { "filesize", "filetype", "progress" },
-			lualine_z = {
-				{ "location", separator = { right = "\u{e0b4}" }, left_padding = 2 },
-			},
+		lualine_x = {},
+		lualine_y = { "filesize", "filetype", "progress" },
+		lualine_z = {
+			{ "location", separator = { right = "\u{e0b4}" }, left_padding = 2 },
 		},
-		inactive_sections = {
-			lualine_a = { { "filename", path = 1 } },
-			lualine_b = {},
-			lualine_c = {},
-			lualine_x = {},
-			lualine_y = {},
-			lualine_z = { "location" },
-		},
-		tabline = {},
-		extensions = {},
-	})
-end
-
-setup_lualine()
-vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_lualine })
+	},
+	inactive_sections = {
+		lualine_a = { { "filename", path = 1 } },
+		lualine_b = {},
+		lualine_c = {},
+		lualine_x = {},
+		lualine_y = {},
+		lualine_z = { "location" },
+	},
+	tabline = {},
+	extensions = {},
+})
 
 -- ── mason ──
 require("mason").setup({})
@@ -566,141 +458,64 @@ require("mason").setup({})
 -- ¶ LSP · diagnostics, formatting, completion, servers
 -- ═══════════════════════════════════════════════════════════════════════════
 
-local lsp_augroup = vim.api.nvim_create_augroup("UserLsp", { clear = true })
-
-vim.o.winborder = "rounded" -- replaces the open_floating_preview patch
-
--- blade files aren't detected by default
-vim.filetype.add({ pattern = { [".*%.blade%.php"] = "blade" } })
-
 -- ── diagnostics ──
-local diagnostic_signs = {
-	Error = "\u{f057} ",
-	Warn = "\u{f071} ",
-	Hint = "\u{ea61} ",
-	Info = "\u{f05a} ",
-}
-
 vim.diagnostic.config({
 	virtual_text = { prefix = "●", spacing = 4 },
 	signs = {
 		text = {
-			[vim.diagnostic.severity.ERROR] = diagnostic_signs.Error,
-			[vim.diagnostic.severity.WARN] = diagnostic_signs.Warn,
-			[vim.diagnostic.severity.INFO] = diagnostic_signs.Info,
-			[vim.diagnostic.severity.HINT] = diagnostic_signs.Hint,
+			[vim.diagnostic.severity.ERROR] = "\u{f057} ",
+			[vim.diagnostic.severity.WARN] = "\u{f071} ",
+			[vim.diagnostic.severity.INFO] = "\u{f05a} ",
+			[vim.diagnostic.severity.HINT] = "\u{ea61} ",
 		},
 	},
-	underline = true,
-	update_in_insert = false,
 	severity_sort = true,
-	float = {
-		source = true,
-		header = "",
-		prefix = "",
-		focusable = false,
-		style = "minimal",
-	},
+	float = { source = true, header = "", prefix = "", focusable = false },
 })
 
--- ── organize imports & format (<leader>oi) ──
--- synchronous on purpose: the code action must land before formatting runs
-local function organize_then_format(bufnr)
-	local params = vim.lsp.util.make_range_params(0, "utf-16")
-	params.context = { only = { "source.organizeImports" }, diagnostics = {} }
+vim.keymap.set("n", "<leader>ih", function()
+	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
+end, { desc = "Toggle inlay hints" })
 
-	local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 2000)
-	for client_id, res in pairs(results or {}) do
-		local client = vim.lsp.get_client_by_id(client_id)
-		for _, action in pairs(res.result or {}) do
-			if action.edit and client then
-				vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
-			elseif action.command and client then
-				client:exec_cmd(action.command, { bufnr = bufnr })
-			end
+-- ── formatting ──
+-- efm formats everything it's configured for (after/lsp/efm.lua); dartls and
+-- rust_analyzer format their own language. markdown/yaml/php are never
+-- formatted on save
+local formatters = { efm = true, dartls = true, rust_analyzer = true }
+local manual_format_ft = { markdown = true, yaml = true, php = true }
+
+-- ── on attach: buffer-local keymaps & format on save ──
+vim.api.nvim_create_autocmd("LspAttach", {
+	group = augroup,
+	callback = function(ev)
+		local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
+		local bufnr = ev.buf
+		local fzf = require("fzf-lua")
+		local function map(lhs, rhs, desc)
+			vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
 		end
-	end
 
-	-- prefer efm (matches format-on-save); fall back to any client (e.g. dartls)
-	local has_efm = #vim.lsp.get_clients({ bufnr = bufnr, name = "efm" }) > 0
-	vim.lsp.buf.format({
-		bufnr = bufnr,
-		timeout_ms = 2000,
-		filter = function(c)
-			return not has_efm or c.name == "efm"
-		end,
-	})
-end
+		map("gd", function()
+			fzf.lsp_definitions({ jump1 = true })
+		end, "Go to definition (fzf)")
+		map("grr", function()
+			fzf.lsp_references({ jump1 = true })
+		end, "References (fzf)")
 
--- ── buffer-local keymaps, registered on attach ──
-local function lsp_on_attach(ev)
-	local client = vim.lsp.get_client_by_id(ev.data.client_id)
-	if not client then
-		return
-	end
-
-	local bufnr = ev.buf
-	local function map(lhs, rhs, desc)
-		vim.keymap.set("n", lhs, rhs, { noremap = true, silent = true, buffer = bufnr, desc = desc })
-	end
-
-	-- K, grn, gra, grr, gri are Neovim defaults — not remapped here
-	map("gd", function()
-		require("fzf-lua").lsp_definitions({ jump1 = true })
-	end, "Go to definition (fzf)")
-	map("<leader>gd", function()
-		require("fzf-lua").lsp_definitions({ jump1 = true })
-	end, "Go to definition (fzf)")
-	map("<leader>gD", vim.lsp.buf.definition, "Go to definition")
-	map("<leader>gS", function()
-		vim.cmd("vsplit")
-		vim.lsp.buf.definition()
-	end, "Go to definition (vsplit)")
-
-	map("<leader>d", function()
-		vim.diagnostic.open_float({ scope = "line" })
-	end, "Line diagnostics")
-	map("<leader>nd", function()
-		vim.diagnostic.jump({ count = 1, float = true })
-	end, "Next diagnostic")
-	map("<leader>pd", function()
-		vim.diagnostic.jump({ count = -1, float = true })
-	end, "Previous diagnostic")
-
-	map("<leader>fr", function()
-		require("fzf-lua").lsp_references()
-	end, "FZF LSP references")
-	map("<leader>ft", function()
-		require("fzf-lua").lsp_typedefs()
-	end, "FZF LSP type definitions")
-	map("<leader>fs", function()
-		require("fzf-lua").lsp_document_symbols()
-	end, "FZF document symbols")
-	map("<leader>fw", function()
-		require("fzf-lua").lsp_workspace_symbols()
-	end, "FZF workspace symbols")
-	map("<leader>fi", function()
-		require("fzf-lua").lsp_implementations()
-	end, "FZF LSP implementations")
-
-	if client:supports_method("textDocument/inlayHint", bufnr) then
-		map("<leader>ih", function()
-			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
-		end, "Toggle inlay hints")
-	end
-
-	if client:supports_method("textDocument/codeAction", bufnr) then
-		map("<leader>oi", function()
-			organize_then_format(bufnr)
-		end, "Organize imports & format")
-	end
-end
-
-vim.api.nvim_create_autocmd("LspAttach", { group = lsp_augroup, callback = lsp_on_attach })
-
-vim.keymap.set("n", "<leader>q", function()
-	vim.diagnostic.setloclist({ open = true })
-end, { desc = "Open diagnostic list" })
+		if formatters[client.name] and not manual_format_ft[vim.bo[bufnr].filetype] then
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				group = augroup,
+				buffer = bufnr,
+				callback = function()
+					if vim.o.diff or not vim.lsp.buf_is_attached(bufnr, client.id) then
+						return
+					end
+					vim.lsp.buf.format({ bufnr = bufnr, id = client.id, timeout_ms = 2000 })
+				end,
+			})
+		end
+	end,
+})
 
 -- ── completion (blink.cmp) ──
 require("blink.cmp").setup({
@@ -713,7 +528,6 @@ require("blink.cmp").setup({
 		["<Tab>"] = { "snippet_forward", "fallback" },
 		["<S-Tab>"] = { "snippet_backward", "fallback" },
 	},
-	appearance = { nerd_font_variant = "mono" },
 	completion = {
 		menu = {
 			auto_show = function()
@@ -722,29 +536,21 @@ require("blink.cmp").setup({
 		},
 	},
 	signature = { enabled = true },
-	sources = { default = { "lsp", "path", "buffer", "snippets" } },
-	fuzzy = {
-		implementation = "prefer_rust",
-		prebuilt_binaries = { download = true },
-	},
+	fuzzy = { implementation = "prefer_rust" },
 })
 
-vim.lsp.config["*"] = {
-	capabilities = require("blink.cmp").get_lsp_capabilities(),
-}
-
 -- ── servers ──
--- per-server configs live in after/lsp/<name>.lua (:h lsp-config) — "after"
--- so they win over nvim-lspconfig's bundled lsp/ files, which come later in
--- 'runtimepath' and would otherwise take precedence on conflicting keys like
--- filetypes. Servers without a file there run on nvim-lspconfig defaults.
+-- per-server configs live in after/lsp/<name>.lua and override the defaults
+-- shipped by nvim-lspconfig (:h lsp-config-merge)
+vim.lsp.config("*", { capabilities = require("blink.cmp").get_lsp_capabilities() })
+
 vim.lsp.enable({
 	"lua_ls",
-	"vue_ls",
 	"ts_ls",
+	"vue_ls",
 	"intelephense",
 	"dartls",
-	"bashls",
+	"rust_analyzer",
 	"jsonls",
 	"tailwindcss",
 	"efm",
