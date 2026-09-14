@@ -429,30 +429,21 @@ require("lualine").setup({
 	options = {
 		component_separators = "",
 		section_separators = { left = "\u{e0b4}", right = "\u{e0b6}" },
-		globalstatus = false,
 	},
 	sections = {
 		lualine_a = { { "mode", separator = { left = "\u{e0b6}" }, right_padding = 2 } },
 		lualine_b = { { "branch", icon = "\u{e725}" }, { "filename", path = 1 } },
-		lualine_c = {
-			"%=",
-		},
+		lualine_c = { "%=" },
 		lualine_x = {},
 		lualine_y = { "filesize", "filetype", "progress" },
-		lualine_z = {
-			{ "location", separator = { right = "\u{e0b4}" }, left_padding = 2 },
-		},
+		lualine_z = { { "location", separator = { right = "\u{e0b4}" }, left_padding = 2 } },
 	},
 	inactive_sections = {
 		lualine_a = { { "filename", path = 1 } },
-		lualine_b = {},
 		lualine_c = {},
 		lualine_x = {},
-		lualine_y = {},
 		lualine_z = { "location" },
 	},
-	tabline = {},
-	extensions = {},
 })
 
 -- ── mason ──
