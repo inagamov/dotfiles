@@ -250,6 +250,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 vim.pack.add({
 	"https://www.github.com/echasnovski/mini.icons",
+	"https://github.com/echasnovski/mini.pairs",
 	"https://github.com/nvim-lualine/lualine.nvim",
 	"https://www.github.com/ibhagwan/fzf-lua",
 	"https://www.github.com/nvim-tree/nvim-tree.lua",
@@ -343,6 +344,9 @@ vim.api.nvim_create_autocmd("PackChanged", {
 local mini_icons = require("mini.icons")
 mini_icons.setup({})
 mini_icons.mock_nvim_web_devicons()
+
+-- ── mini.pairs ──
+require("mini.pairs").setup()
 
 -- ── nvim-tree ──
 require("nvim-tree").setup({
