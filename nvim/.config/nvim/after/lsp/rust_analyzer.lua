@@ -3,7 +3,9 @@
 return {
 	settings = {
 		["rust-analyzer"] = {
-			check = { command = "clippy" }, -- clippy lints instead of plain `cargo check` on save
+			-- clippy lints instead of plain `cargo check` on save; allTargets
+			-- includes tests so items used only under #[cfg(test)] aren't dead
+			check = { command = "clippy", allTargets = true },
 		},
 	},
 }
