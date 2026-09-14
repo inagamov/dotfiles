@@ -141,14 +141,16 @@ vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yankin
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
-vim.g.tmux_navigator_no_mappings = 1
-vim.keymap.set("n", "<C-h>", "<cmd>TmuxNavigateLeft<CR>", { desc = "Move to left window/pane" })
-vim.keymap.set("n", "<C-j>", "<cmd>TmuxNavigateDown<CR>", { desc = "Move to bottom window/pane" })
-vim.keymap.set("n", "<C-k>", "<cmd>TmuxNavigateUp<CR>", { desc = "Move to top window/pane" })
-vim.keymap.set("n", "<C-l>", "<cmd>TmuxNavigateRight<CR>", { desc = "Move to right window/pane" })
-
-vim.keymap.set("n", "<leader>sv", ":vsplit<CR>", { desc = "Split window vertically" })
-vim.keymap.set("n", "<leader>sh", ":split<CR>", { desc = "Split window horizontally" })
+vim.keymap.set("n", "<C-w>z", function()
+	local tab = vim.t
+	if tab.zoom_restore then
+		vim.cmd(tab.zoom_restore)
+		tab.zoom_restore = nil
+	else
+		tab.zoom_restore = vim.fn.winrestcmd()
+		vim.cmd("wincmd _ | wincmd |")
+	end
+end, { desc = "Toggle window zoom" })
 
 -- ── editing ──
 -- FIXME:
