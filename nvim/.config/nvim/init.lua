@@ -371,6 +371,7 @@ require("fzf-lua").setup({
 		rg_opts = "--fixed-strings --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e",
 	},
 })
+require("fzf-lua").register_ui_select()
 
 vim.keymap.set("n", "<leader>ff", function()
 	require("fzf-lua").files()
@@ -466,7 +467,9 @@ require("mason").setup({})
 
 -- ── diagnostics ──
 vim.diagnostic.config({
-	virtual_text = { prefix = "●", spacing = 4 },
+	virtual_text = false,
+	virtual_lines = { current_line = true },
+	underline = { severity = { min = vim.diagnostic.severity.WARN } },
 	signs = {
 		text = {
 			[vim.diagnostic.severity.ERROR] = "\u{f057} ",
@@ -476,7 +479,7 @@ vim.diagnostic.config({
 		},
 	},
 	severity_sort = true,
-	float = { source = true, header = "", prefix = "", focusable = false },
+	float = { source = true, border = "rounded", header = "", prefix = "", focusable = true },
 })
 
 vim.keymap.set("n", "<leader>ih", function()
