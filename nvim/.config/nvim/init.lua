@@ -137,7 +137,7 @@ vim.keymap.set("n", "G", "Gzz", { desc = "Bottom of the file (centered)" })
 vim.keymap.set("x", "<leader>p", '"_dP', { desc = "Paste without yanking" })
 vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yanking" })
 
--- ── buffers, windows & tmux ──
+-- ── buffers, windows & tabs ──
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 
@@ -273,7 +273,6 @@ vim.pack.add({
 		src = "https://github.com/saghen/blink.cmp",
 		version = vim.version.range("1.*"),
 	},
-	"https://github.com/christoomey/vim-tmux-navigator",
 })
 
 -- ── nvim-treesitter ──
