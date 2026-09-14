@@ -408,6 +408,16 @@ require("gitsigns").setup({
 		map("n", "<leader>h", function()
 			gs.preview_hunk_inline()
 		end, "Preview hunk inline")
+
+		map("n", "<leader>gs", gs.stage_hunk, "Stage hunk (toggle)")
+		map("v", "<leader>gs", function()
+			gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end, "Stage selected lines")
+		map("n", "<leader>gr", gs.reset_hunk, "Reset hunk")
+		map("v", "<leader>gr", function()
+			gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end, "Reset selected lines")
+		map("n", "<leader>gS", gs.stage_buffer, "Stage buffer")
 	end,
 })
 
