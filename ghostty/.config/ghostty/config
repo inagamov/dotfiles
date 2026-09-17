@@ -1,6 +1,6 @@
 theme = Gruvbox Dark
 background-opacity = 0.95
-background-blur = 40
+background-blur = 60
 window-padding-color = extend
 
 font-family = JetBrainsMono Nerd Font Mono
