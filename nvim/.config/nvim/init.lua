@@ -263,6 +263,8 @@ vim.pack.add({
 	"https://github.com/sphamba/smear-cursor.nvim",
 	"https://github.com/lewis6991/gitsigns.nvim",
 	"https://github.com/tpope/vim-fugitive",
+	"https://github.com/tpope/vim-surround",
+	"https://github.com/tpope/vim-repeat",
 	-- Language Server Protocols
 	"https://www.github.com/neovim/nvim-lspconfig",
 	"https://github.com/mason-org/mason.nvim",
