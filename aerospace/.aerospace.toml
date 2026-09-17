@@ -73,21 +73,9 @@ on-mode-changed = []
 #if.app-id = 'com.apple.finder'
 #run = 'layout floating'
 
-#[[on-window-detected]]
-#if.app-id = 'com.apple.iCal'
-#run = 'layout floating'
-
 [[on-window-detected]]
 if.app-id = 'sandimax.Wallper'
 run = 'layout floating'
-
-[[on-window-detected]]
-if.app-id = 'ru.keepcoder.Telegram'
-run = 'layout floating'
-
-#[[on-window-detected]]
-#if.app-id = 'com.spotify.client'
-#run = 'layout floating'
 
 [[on-window-detected]]
 if.app-id = 'com.macpaw.CleanMyMac-mas'
@@ -156,8 +144,6 @@ run = 'layout floating'
     alt-2 = 'workspace 2'
     alt-3 = 'workspace 3'
     alt-0 = 'workspace 0'
-    alt-s = 'workspace S'
-    alt-c = 'workspace C'
     alt-f = 'workspace F'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
@@ -165,8 +151,6 @@ run = 'layout floating'
     alt-shift-2 = 'move-node-to-workspace 2'
     alt-shift-3 = 'move-node-to-workspace 3'
     alt-shift-0 = 'move-node-to-workspace 0'
-    alt-shift-s = 'move-node-to-workspace S'
-    alt-shift-c = 'move-node-to-workspace C'
     alt-shift-f = 'move-node-to-workspace F'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
