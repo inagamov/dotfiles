@@ -1,7 +1,7 @@
-theme = Gruvbox Dark
-background-opacity = 0.95
-background-blur = 60
-window-padding-color = extend
+#theme = Gruvbox Dark
+theme = Firefox Dev
+background-opacity = 0.9
+background-blur = 40
 
 font-family = JetBrainsMono Nerd Font Mono
 font-size = 18
@@ -12,6 +12,7 @@ shell-integration-features = no-cursor
 
 window-padding-balance = true
 window-save-state = always
+window-padding-color = extend
 
 copy-on-select = clipboard
 
