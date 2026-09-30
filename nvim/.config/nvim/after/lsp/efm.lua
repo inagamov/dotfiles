@@ -1,7 +1,28 @@
 -- efm — linters & formatters
 local luacheck = require("efmls-configs.linters.luacheck")
 local stylua = require("efmls-configs.formatters.stylua")
-local prettier_d = require("efmls-configs.formatters.prettier_d")
+-- prettier_d only where the project opts into prettier: without a config its
+-- defaults (double quotes, 80-col wrapping) rewrite files against the
+-- project's style. A "prettier" key in package.json isn't detected.
+local prettier_d = vim.tbl_extend("force", require("efmls-configs.formatters.prettier_d"), {
+	rootMarkers = {
+		".prettierrc",
+		".prettierrc.json",
+		".prettierrc.json5",
+		".prettierrc.yaml",
+		".prettierrc.yml",
+		".prettierrc.toml",
+		".prettierrc.js",
+		".prettierrc.cjs",
+		".prettierrc.mjs",
+		".prettierrc.ts",
+		"prettier.config.js",
+		"prettier.config.cjs",
+		"prettier.config.mjs",
+		"prettier.config.ts",
+	},
+	requireMarker = true,
+})
 local fixjson = require("efmls-configs.formatters.fixjson")
 local shellcheck = require("efmls-configs.linters.shellcheck")
 local shfmt = require("efmls-configs.formatters.shfmt")
