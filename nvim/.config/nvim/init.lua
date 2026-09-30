@@ -5,17 +5,18 @@ vim.opt.termguicolors = true
 -- ═══════════════════════════════════════════════════════════════════════════
 
 vim.pack.add({
-	-- "https://github.com/navarasu/onedark.nvim",
+	"https://github.com/navarasu/onedark.nvim",
 	"https://github.com/ellisonleao/gruvbox.nvim",
 })
 
--- require("onedark").setup({
--- 	style = "darker",
--- })
+require("onedark").setup({
+	style = "darker",
+	transparent = true,
+})
 
 require("gruvbox").setup({ transparent_mode = true })
 
-vim.cmd.colorscheme("gruvbox")
+vim.cmd.colorscheme("onedark")
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ OPTIONS · editor behavior
@@ -442,15 +443,15 @@ require("smear_cursor").setup({
 require("lualine").setup({
 	options = {
 		component_separators = "",
-		section_separators = { left = "\u{e0b4}", right = "\u{e0b6}" },
+		section_separators = "",
 	},
 	sections = {
-		lualine_a = { { "mode", separator = { left = "\u{e0b6}" }, right_padding = 2 } },
+		lualine_a = { { "mode", right_padding = 2 } },
 		lualine_b = { { "branch", icon = "\u{e725}" }, { "filename", path = 1 } },
 		lualine_c = { "%=" },
 		lualine_x = {},
 		lualine_y = { "filesize", "filetype", "progress" },
-		lualine_z = { { "location", separator = { right = "\u{e0b4}" }, left_padding = 2 } },
+		lualine_z = { { "location", left_padding = 2 } },
 	},
 	inactive_sections = {
 		lualine_a = { { "filename", path = 1 } },
