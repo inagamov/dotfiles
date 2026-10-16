@@ -6,7 +6,8 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 // ── CONFIG ── tweak these, higher = stronger ──────────────────────────────
-const float CURVATURE   = 0.03;  // screen bend. 0.0 = flat, ~0.3 = chunky CRT
+//const float CURVATURE   = 0.03;  // screen bend. 0.0 = flat, ~0.3 = chunky CRT
+const float CURVATURE   = 0.0;  // screen bend. 0.0 = flat, ~0.3 = chunky CRT
 const float BLOOM       = 0.45;  // glow bleed from bright text
 const float BLOOM_RADIUS= 2.0;   // how far the glow spreads (in pixels * this)
 const float SCANLINE    = 0.22;  // dark horizontal line strength. 0 = off
