@@ -427,6 +427,16 @@ require("gitsigns").setup({
 	end,
 })
 
+-- ── fugitive ──
+vim.keymap.set("n", "<leader>gg", "<cmd>vert topleft Git | vertical resize 60<CR>", { desc = "Git status (left sidebar)" })
+vim.api.nvim_create_autocmd("FileType", {
+	group = augroup,
+	pattern = "fugitive",
+	callback = function(args)
+		vim.keymap.set("n", "<leader>gp", "<cmd>Git pull<CR>", { buffer = args.buf, desc = "Git pull" })
+	end,
+})
+
 -- ── smear-cursor ──
 require("smear_cursor").setup({
 	cursor_color = "#d3cdc3",
