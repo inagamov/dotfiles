@@ -2,6 +2,8 @@
 theme = Firefox Dev
 background-opacity = 0.9
 background-blur = 40
+background-opacity = 1
+background-blur = 0
 
 font-family = JetBrainsMono Nerd Font Mono
 font-size = 18
@@ -16,5 +18,5 @@ window-padding-color = extend
 
 copy-on-select = clipboard
 
-#custom-shader = ~/.config/ghostty/shaders/crt.glsl
-#custom-shader-animation = false
+custom-shader = ~/.config/ghostty/shaders/crt.glsl
+custom-shader-animation = false
