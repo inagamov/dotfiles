@@ -1,7 +1,9 @@
 #theme = Gruvbox Dark
 theme = Firefox Dev
-background-opacity = 0.9
-background-blur = 40
+#theme = JetBrains Darcula
+#theme = Citruszest
+#theme = Ayu
+
 background-opacity = 1
 background-blur = 0
 
