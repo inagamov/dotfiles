@@ -16,7 +16,7 @@ require("onedark").setup({
 
 require("gruvbox").setup({ transparent_mode = true })
 
-vim.cmd.colorscheme("onedark")
+vim.cmd.colorscheme("gruvbox")
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ¶ OPTIONS · editor behavior
